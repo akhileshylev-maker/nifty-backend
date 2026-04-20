@@ -16,13 +16,13 @@ if ACCESS_TOKEN:
 @app.route('/market_data')
 def market_data():
     if not kite or not ACCESS_TOKEN:
-        return jsonify({"error": "Token not set"}), 401
+        return jsonify({"error": "Kite token not set"}), 401
 
     try:
         funds = kite.margins()
         eq = funds.get('equity', {})
         available = eq.get('available', {})
-        balance = available.get('cash', 0) + available.get('collateral', 0)
+        live_cash = available.get('cash', 0) + available.get('collateral', 0)
 
         watch = [
             "NSEIX:GIFT NIFTY", "NSE:INDIA VIX", "CDS:USDINR26APRFUT",
@@ -37,7 +37,7 @@ def market_data():
             "brent": quotes.get('MCX:CRUDEOIL26APRFUT', {}).get('last_price', 'N/A'),
             "gold": quotes.get('MCX:GOLD26APRFUT', {}).get('last_price', 'N/A'),
             "silver": quotes.get('MCX:SILVER26MAYFUT', {}).get('last_price', 'N/A'),
-            "available_balance": f"₹{balance:,.2f}"
+            "available_balance": f"₹{live_cash:,.2f}"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
