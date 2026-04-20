@@ -1,27 +1,28 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 from kiteconnect import KiteConnect
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 API_KEY = "chd1njoljnzyu2n6"
-ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")   # Set on Render.com
+ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 
 kite = KiteConnect(api_key=API_KEY)
 if ACCESS_TOKEN:
     kite.set_access_token(ACCESS_TOKEN)
-    print("Kite connected successfully")
 
 @app.route('/market_data')
 def market_data():
     if not kite or not ACCESS_TOKEN:
-        return jsonify({"error": "Kite not connected"}), 500
+        return jsonify({"error": "Kite token not set"}), 401
 
     try:
         funds = kite.margins()
-        eq = funds['equity']
-        live_cash = eq['available']['cash'] + eq['available'].get('collateral', 0)
-        display_funds = live_cash if live_cash > 0 else eq['available']['opening_balance']
+        eq = funds.get('equity', {})
+        available = eq.get('available', {})
+        live_cash = available.get('cash', 0) + available.get('collateral', 0)
 
         watch = [
             "NSEIX:GIFT NIFTY", "NSE:INDIA VIX", "CDS:USDINR26APRFUT",
@@ -30,13 +31,13 @@ def market_data():
         quotes = kite.quote(watch)
 
         return jsonify({
-            "available_balance": f"₹{display_funds:,.2f}",
             "gift_nifty": quotes.get('NSEIX:GIFT NIFTY', {}).get('last_price', 'N/A'),
             "india_vix": quotes.get('NSE:INDIA VIX', {}).get('last_price', 'N/A'),
             "usdinr": quotes.get('CDS:USDINR26APRFUT', {}).get('last_price', 'N/A'),
             "brent": quotes.get('MCX:CRUDEOIL26APRFUT', {}).get('last_price', 'N/A'),
             "gold": quotes.get('MCX:GOLD26APRFUT', {}).get('last_price', 'N/A'),
-            "silver": quotes.get('MCX:SILVER26MAYFUT', {}).get('last_price', 'N/A')
+            "silver": quotes.get('MCX:SILVER26MAYFUT', {}).get('last_price', 'N/A'),
+            "available_balance": f"₹{live_cash:,.2f}"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
