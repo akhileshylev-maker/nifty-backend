@@ -2,8 +2,6 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from kiteconnect import KiteConnect
 import os
-import datetime
-import pytz
 
 app = Flask(__name__)
 CORS(app)
@@ -21,19 +19,22 @@ def market_data():
         return jsonify({"error": "Token not set"}), 401
 
     try:
-        # Market Data
         funds = kite.margins()
         eq = funds.get('equity', {})
         available = eq.get('available', {})
         balance = available.get('cash', 0) + available.get('collateral', 0)
 
         watch = [
-            "NSEIX:GIFT NIFTY", "NSE:INDIA VIX", "CDS:USDINR26APRFUT",
-            "MCX:CRUDEOIL26APRFUT", "MCX:GOLD26APRFUT", "MCX:SILVER26MAYFUT"
+            "NSEIX:GIFT NIFTY", 
+            "NSE:INDIA VIX", 
+            "CDS:USDINR26APRFUT",
+            "MCX:CRUDEOIL26APRFUT", 
+            "MCX:GOLD26APRFUT", 
+            "MCX:SILVER26MAYFUT"
         ]
         quotes = kite.quote(watch)
 
-        market_info = {
+        return jsonify({
             "gift_nifty": quotes.get('NSEIX:GIFT NIFTY', {}).get('last_price', 'N/A'),
             "india_vix": quotes.get('NSE:INDIA VIX', {}).get('last_price', 'N/A'),
             "usdinr": quotes.get('CDS:USDINR26APRFUT', {}).get('last_price', 'N/A'),
@@ -41,16 +42,6 @@ def market_data():
             "gold": quotes.get('MCX:GOLD26APRFUT', {}).get('last_price', 'N/A'),
             "silver": quotes.get('MCX:SILVER26MAYFUT', {}).get('last_price', 'N/A'),
             "available_balance": f"₹{balance:,.2f}"
-        }
-
-        return jsonify({
-            "status": "success",
-            "market": market_info,
-            "recommendation": {
-                "type": "STRONG BULLISH",
-                "message": "Buy Weekly 24400CE or 24450CE"
-            },
-            "note": "Full sentiment analysis, expected premium, and dynamic strikes coming soon"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
