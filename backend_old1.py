@@ -25,12 +25,8 @@ def market_data():
         balance = available.get('cash', 0) + available.get('collateral', 0)
 
         watch = [
-            "NSEIX:GIFT NIFTY", 
-            "NSE:INDIA VIX", 
-            "CDS:USDINR26APRFUT",
-            "MCX:CRUDEOIL26APRFUT", 
-            "MCX:GOLD26APRFUT", 
-            "MCX:SILVER26MAYFUT"
+            "NSEIX:GIFT NIFTY", "NSE:INDIA VIX", "CDS:USDINR26APRFUT",
+            "MCX:CRUDEOIL26APRFUT", "MCX:GOLD26APRFUT", "MCX:SILVER26MAYFUT"
         ]
         quotes = kite.quote(watch)
 
